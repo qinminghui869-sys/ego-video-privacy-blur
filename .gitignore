@@ -1,0 +1,42 @@
+# Python and build artifacts
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+build/
+dist/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Local data and runtime state
+models/
+data/
+datasets/
+outputs/
+runs/
+.batch/
+.local/
+.yolo_config/
+*.pt
+*.pth
+*.onnx
+*.engine
+*.mp4
+*.mov
+*.mkv
+*.avi
+*.m4v
+*.vrs
+*.log
+*.detections.jsonl
+*.report.json
+
+# Local settings and editor files
+.env
+.env.*
+!.env.example
+.DS_Store
+.idea/
+.vscode/

@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=77", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "privacy-blur"
+version = "0.2.0"
+description = "Face and license plate blurring with resumable batch video processing."
+readme = "README.md"
+requires-python = ">=3.9"
+license = "MIT"
+license-files = ["LICENSE", "NOTICE.md"]
+authors = [{name = "MengWoods"}]
+dependencies = [
+  "ultralytics>=8.2.0",
+  "opencv-python>=4.9.0",
+  "numpy>=1.26",
+]
+
+[project.scripts]
+privacy-blur = "privacy_blur.cli:main"
+privacy-blur-batch = "privacy_blur.batch:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools]
+package-dir = {"" = "src"}

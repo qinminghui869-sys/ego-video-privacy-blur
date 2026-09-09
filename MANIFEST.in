@@ -1,0 +1,3 @@
+include README.md README_ZH.md LICENSE NOTICE.md
+recursive-include tests *.py
+recursive-include scripts *.sh
