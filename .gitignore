@@ -11,7 +11,7 @@ dist/
 htmlcov/
 
 # Local data and runtime state
-models/
+models/*
 data/
 datasets/
 outputs/
@@ -40,3 +40,7 @@ runs/
 .DS_Store
 .idea/
 .vscode/
+
+# Bundled face model and provenance
+!models/yolov8n-face.pt
+!models/yolov8n-face.pt.source.json

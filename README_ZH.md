@@ -16,7 +16,7 @@ source .venv/bin/activate
 python -m pip install -e .
 ```
 
-将兼容的 YOLO 人脸检测权重放入 `models/`。仓库不包含权重。应使用兼容的 `yolov8n-face.pt` 等人脸专用模型，不能用通用目标检测权重替代。使用 CUDA 时，请安装与 GPU 环境匹配的 PyTorch。
+仓库已包含 [models/yolov8n-face.pt](models/yolov8n-face.pt)，下载来源及 SHA-256 校验值见[来源记录](models/yolov8n-face.pt.source.json)。应使用兼容的 `yolov8n-face.pt` 等人脸专用模型，不能用通用目标检测权重替代。使用 CUDA 时，请安装与 GPU 环境匹配的 PyTorch。
 
 ## 只传入视频或目录
 
@@ -134,7 +134,7 @@ privacy-blur --input input.mp4 --output blurred.mp4 \
 python -m unittest discover -s tests -v
 ```
 
-测试使用合成视频，不下载模型权重。模型、输入输出视频、环境、日志及本地实验文件均排除在 Git 之外。
+测试使用合成视频，不下载模型权重。其他模型权重、输入输出视频、环境、日志及本地实验文件均排除在 Git 之外。
 
 遮挡作用于直接检测及跨帧补漏区域，仍可能存在漏脸及其他身份线索。输出校验验证文件完整性，不代表检测覆盖率或匿名化通过验收。
 

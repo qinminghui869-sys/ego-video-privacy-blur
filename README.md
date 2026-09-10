@@ -16,7 +16,7 @@ source .venv/bin/activate
 python -m pip install -e .
 ```
 
-Place a compatible YOLO face detection model in `models/`. Model weights are not included. Use face-specific weights, such as a compatible `yolov8n-face.pt`; general object-detection weights are not a substitute. Choose a PyTorch installation that supports your GPU when using CUDA.
+The repository includes [models/yolov8n-face.pt](models/yolov8n-face.pt). Its download source and SHA-256 checksum are recorded in [the provenance file](models/yolov8n-face.pt.source.json). Use face-specific weights, such as a compatible `yolov8n-face.pt`; general object-detection weights are not a substitute. Choose a PyTorch installation that supports your GPU when using CUDA.
 
 ## One-argument processing
 
@@ -134,7 +134,7 @@ The single-video command writes MP4 without audio and overwrites an existing out
 python -m unittest discover -s tests -v
 ```
 
-Tests use synthetic videos and do not download model weights. Models, input/output videos, environments, logs, and local experiments are excluded from Git.
+Tests use synthetic videos and do not download model weights. Additional model weights, input/output videos, environments, logs, and local experiments are excluded from Git.
 
 Obscuring affects detected and temporally recovered regions. Missed faces and identifying details elsewhere remain possible; output validation checks file integrity, not anonymity or detection coverage.
 
