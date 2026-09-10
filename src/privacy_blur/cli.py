@@ -1,7 +1,8 @@
 import argparse, cv2, sys
 from .detectors import PlateDetectorYOLO, FaceDetectorHaar, FaceDetectorYOLO
-from .blur_ops import DEFAULT_BLUR_STRENGTH, gaussian_inplace, pixelate_inplace
+from .blur_ops import DEFAULT_BLUR_STRENGTH, gaussian_inplace, pixelate_inplace, egoblur_inplace
 from .utils import choose_device, expand_box, nms_merge
+from .temporal import temporal_frames, add_temporal_arguments, validate_temporal_arguments
 
 def main():
     ap = argparse.ArgumentParser("Blur license plates and/or faces in video")
@@ -16,12 +17,14 @@ def main():
     ap.add_argument("--no-blur-plates", dest="blur_plates", action="store_false")
     ap.add_argument("--blur-faces", action="store_true", default=True, help="blur faces")
     ap.add_argument("--no-blur-faces", dest="blur_faces", action="store_false")
-    ap.add_argument("--face-detector", choices=["haar","yolo"], default="haar", help="face backend")
-    ap.add_argument("--face-yolo-weights", default="yolov8n-face.pt", help="YOLO face weights (file or hub id)")
-    ap.add_argument("--method", choices=["gaussian","pixelate"], default="gaussian", help="blur method")
+    ap.add_argument("--face-detector", choices=["haar","yolo"], default="yolo", help="face backend")
+    ap.add_argument("--face-yolo-weights", default="models/yolov8n-face.pt", help="YOLO face weights (file or hub id)")
+    ap.add_argument("--method", choices=["gaussian","pixelate","egoblur"], default="gaussian", help="blur method")
     ap.add_argument("--plate-weights", default="models/license_plate_detector.pt", help="Path to YOLO license plate model (.pt)")
-    ap.add_argument("--blur-strength", type=float, default=DEFAULT_BLUR_STRENGTH, help="Lower = stronger blur (bbox divisor; default: 0.5). Does not guarantee anonymization.")
+    ap.add_argument("--blur-strength", type=float, default=DEFAULT_BLUR_STRENGTH, help="Lower = stronger blur (bbox divisor; default: 1). Does not guarantee anonymization.")
+    add_temporal_arguments(ap)
     args = ap.parse_args()
+    validate_temporal_arguments(ap, args)
 
     device = choose_device(args.device)
     print(f"[INFO] Using device: {device}")
@@ -46,30 +49,37 @@ def main():
     else:
         face_detector = None
 
-    while True:
-        ok, frame = cap.read()
-        if not ok: break
+    def input_frames():
+        while True:
+            ok, frame = cap.read()
+            if not ok:
+                break
+            yield frame
 
-        boxes = []
-        if plate_detector:
-            boxes += plate_detector(frame)
-        if face_detector:
-            boxes += face_detector(frame)
+    def detect_faces(frame):
+        return nms_merge(face_detector(frame), iou_thresh=0.5) if face_detector else []
 
-        boxes = nms_merge(boxes, iou_thresh=0.5)
+    try:
+        for frame, regions in temporal_frames(input_frames(), detect_faces, args.track_gap):
+            if plate_detector:
+                regions += [(box, False) for box in nms_merge(plate_detector(frame), iou_thresh=0.5)]
+            for box, recovered in regions:
+                scale = args.scale * (args.track_scale if recovered else 1.)
+                x1,y1,x2,y2 = expand_box(*box, scale, W, H)
+                if args.method == "gaussian":
+                    gaussian_inplace(frame, x1,y1,x2,y2, args.blur_strength)
+                elif args.method == "egoblur":
+                    egoblur_inplace(frame, x1,y1,x2,y2, ellipse=not recovered)
+                else:
+                    pixelate_inplace(frame, x1,y1,x2,y2)
 
-        for (x1,y1,x2,y2) in boxes:
-            x1,y1,x2,y2 = expand_box(x1,y1,x2,y2, args.scale, W, H)
-            if args.method == "gaussian":
-                gaussian_inplace(frame, x1,y1,x2,y2, args.blur_strength)
-            else:
-                pixelate_inplace(frame, x1,y1,x2,y2)
+            writer.write(frame)
+            if args.show:
+                cv2.imshow("privacy-blur", frame)
+                if cv2.waitKey(1) & 0xFF == 27: break
+    finally:
+        cap.release()
+        writer.release()
+        if args.show: cv2.destroyAllWindows()
 
-        writer.write(frame)
-        if args.show:
-            cv2.imshow("privacy-blur", frame)
-            if cv2.waitKey(1) & 0xFF == 27: break
-
-    cap.release(); writer.release()
-    if args.show: cv2.destroyAllWindows()
     print(f"[OK] Saved: {args.output}")
